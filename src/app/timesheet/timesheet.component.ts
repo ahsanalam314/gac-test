@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { TimesheetService } from './services/timesheet.service';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { distinctUntilChanged, Observable, OperatorFunction, startWith, switchMap, throttleTime } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, forkJoin, Observable, of, OperatorFunction, startWith, switchMap } from 'rxjs';
 import { ITask } from './interfaces/task.interface';
 import { ITaskTypeahed } from './interfaces/task-typeahead.interface';
+import { NgbTypeaheadSelectItemEvent } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-timesheet',
@@ -14,19 +15,20 @@ export class TimesheetComponent implements OnInit {
 
   form!: FormGroup;
   headers = ['Task', 'Start', 'End'];
-  tasks = [];
-  logs:ITask[] = [];
+  tasks: ITaskTypeahed[] = [];
+  logs: ITask[] = [];
+  filter: string = '';
 
   constructor(private timesheetService: TimesheetService, private formBuilder: FormBuilder) {
     this.createForm();
-
   }
 
   ngOnInit(): void {
+    this.getTasks();
     this.getLogs();
   }
 
-  createForm() {
+  createForm(): void {
     this.form = this.formBuilder.group({
       task: new FormControl('', [Validators.required]),
       start: new FormControl('', [Validators.required]),
@@ -38,38 +40,65 @@ export class TimesheetComponent implements OnInit {
     return this.form.controls;
   }
 
-  saveTask() {
+  saveTask(): void {
     if (this.form.invalid) {
       return;
     }
 
-    this.timesheetService.saveLog(this.form.value).subscribe(response => {
-      console.log('save: ', response);
-      this.form.reset();
-      this.getLogs();
-    }, error => {
-
-    })
+    this.timesheetService.saveLog(this.form.value).subscribe({
+      next: (response: ITask) => {
+        this.form.reset();
+        this.getLogs();
+      },
+      error: (error) => {
+        console.log(error)
+      }
+    });
 
   }
 
   formatter = (task: ITaskTypeahed) => task?.name;
 
-  searchTask: OperatorFunction<string, readonly Object[]> = (text$: Observable<string>) => {
+  searchTask: OperatorFunction<string, readonly ITaskTypeahed[]> = (text$: Observable<string>) => {
     return text$.pipe(
-      throttleTime(500),
+      debounceTime(300),
       distinctUntilChanged(),
-      switchMap(value => this.timesheetService.getTask(value))
+      switchMap(value => this.timesheetService.getTasks(value)),
+      catchError(error => of([]))
     );
   }
 
-  getLogs() {
-    this.timesheetService.getLogs().subscribe((response: any) => {
-      this.logs = response;
-    }, (error) => {
-
-    })
+  getLogs(): void {
+    this.timesheetService.getLogs(this.filter).subscribe({
+      next: (response: ITask[]) => {
+        this.logs = response ?? [];
+      },
+      error: (error) => {
+        console.error(error);
+        this.logs = [];
+      }
+    });
   }
 
+  getTasks(): void {
+    this.timesheetService.getTasks().subscribe({
+      next: (response: ITaskTypeahed[] ) => {
+        this.tasks = response ?? []
+      },
+      error: (error) => {
+        console.error(error);
+      }
+    });
+  }
+
+  clear(): void {
+    this.filter = '';
+    this.getLogs();
+  }
+
+  onItemSelect(event: NgbTypeaheadSelectItemEvent): void {
+    const task =  event.item as ITaskTypeahed;
+    this.controls['task'].setValue(task.name);
+  }
 
 }
