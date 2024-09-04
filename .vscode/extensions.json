@@ -1,0 +1,10 @@
+{
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=827846
+  "recommendations": [
+    "angular.ng-template",
+    "cyrilletuzi.angular-schematics",
+    "infinity1207.angular2-switcher",
+    "csstools.postcss",
+    "Zignd.html-css-class-completion"
+  ]
+}

@@ -1,0 +1,6 @@
+Styles: 
+<select name="cssLibrary" [ngModel]="cssLibrary" (ngModelChange)="onLibChanged($event)">
+    <option *ngFor="let cssLib of Object.entries(cssLibraryOptions)" [ngValue]="cssLib[1].key">
+        {{cssLib[1].key}}
+    </option>
+</select>

@@ -1,0 +1,47 @@
+<div class="container-fluid">
+  <div class="row" [formGroup]="form">
+    <div class="col-lg-2 col-md-3 col-12">
+      <label for="">TASK</label>
+      <input type="text" class="form-control" formControlName="task" [ngbTypeahead]="searchTask" [resultFormatter]="formatter">
+      <ng-container *ngIf="controls['task'].touched && controls['task'].hasError('required')">
+        <div class="text-danger">Task is required</div>
+      </ng-container>
+    </div>
+    <div class="col-lg-2 col-md-3 col-12">
+      <label for="">START</label>
+      <input type="datetime-local" class="form-control" formControlName="start">
+      <ng-container *ngIf="controls['start'].touched && controls['start'].hasError('required')">
+        <div class="text-danger">Start date and time is required</div>
+      </ng-container>
+    </div>
+    <div class="col-lg-2 col-md-3 col-12">
+      <label for="">END</label>
+      <input type="datetime-local" class="form-control" formControlName="end">
+      <ng-container *ngIf="controls['end'].touched && controls['end'].hasError('required')">
+        <div class="text-danger">End date and time is required</div>
+      </ng-container>
+    </div>
+    <div class="col-lg-2 col-md-3 col-12 align-self-center">
+      <button type="submit" class="btn btn-primary" (click)="saveTask()">Save</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <table class="table table-responsive">
+        <thead>
+          <tr>
+            <td *ngFor="let header of headers">{{header}}</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs">
+            <td>{{ log?.task }}</td>
+            <td>{{ log?.start | date: 'MMM d, yyyy hh:mm a' }}</td>
+            <td>{{ log?.end | date: 'MMM d, yyyy hh:mm a' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
